@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/main.css" />
+    <title>聊天机器人</title>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <!-- 头部 Header 区域 -->
+      <div class="header">
+        <h3>小思同学</h3>
+        <img src="img/person01.png" alt="icon" />
+      </div>
+      <!-- 中间 聊天内容区域 -->
+      <div class="main">
+        <ul class="talk_list" style="top: 0px" id="talk_list">
+          <!-- 机器人 -->
+          <li class="left_word">
+            <img src="img/person01.png" /> <span>嗨，最近想我没有？</span>
+          </li>
+          <!-- 我 -->
+          <!-- <li class="right_word">
+          <img src="img/person02.png" /> <span>嗨，最近想我没有？</span>
+        </li> -->
+        </ul>
+      </div>
+      <!-- 底部 消息编辑区域 -->
+      <div class="footer">
+        <img src="img/person02.png" alt="icon" />
+        <input
+          type="text"
+          placeholder="说的什么吧..."
+          class="input_txt"
+          id="ipt"
+        />
+        <input type="button" value="发 送" class="input_sub" id="btnSend" />
+      </div>
+    </div>
+    <script type="text/javascript" src="js/jquery-1.12.4.min.js"></script>
+    <audio src="" id="voice" autoplay style="display: none"></audio>
+    <script>
+      //点击发送按钮,将输入框的内容展示在右侧
+      //获取元素
+      let ipt = $('#ipt')
+      let btnSend = $('#btnSend')
+      let talk_list = $('#talk_list')
+      //给发送按钮注册事件
+      btnSend.on('click', function () {
+        //获取输入框的内容
+        let str = ipt.val().trim()
+        // console.log(str)
+        //清空输入框内容
+        ipt.val('')
+        //判断输入框内容为空时,提示
+        if (!str) {
+          return alert('请输入内容')
+        }
+
+
+        //创建li
+        let right_word =$(`<li class="right_word">
+          <img src="img/person02.png" /> <span>${str}</span>
+        </li> `)
+        right_word.appendTo(talk_list)
+        //让右侧的聊天对话框滚动到可视区域
+        // right_word.scrollIntoView()   //right_word转为DOM对象
+        right_word[0].scrollIntoView()   
+        // 发送请求
+        $.ajax({
+          url:'http://www.liulongbin.top:3006/api/robot',
+          data: {
+            spoken:str
+          },
+          success:function (res) {
+            // console.log(res)
+            //获取机器人说的话
+            let txt = res.data.info.text
+            // console.log(txt)
+
+            //将机器人说的话展示在left_word上
+            let left_word = $(`<li class="left_word">
+            <img src="img/person02.png" /> <span>${txt}</span>
+            </li> `)
+            left_word.appendTo(talk_list)
+
+            //让左侧的聊天对话框滚动到可视区域
+          // right_word.scrollIntoView()   //right_word转为DOM对象
+          left_word[0].scrollIntoView()  
+           //实现将ajax的文字转语音播放
+           getVoice(txt)
+          }
+        })
+
+        
+      })
+      //定义一个函数,将ajax请求的文字转语音播放
+      function getVoice(text) {
+        console.log(text)
+
+        $.ajax({
+          url:'http://www.liulongbin.top:3006/api/synthesize',
+          data:{
+            text
+          },
+          success:function (res) {
+            console.log(res)
+            //给audio设置 src值
+            $('#voice').attr('src', res.voiceUrl)
+          }
+        })
+      }
+      //按下键盘enter键 发送输入框信息
+      ipt.on('keyup', function (e) {
+        if (e.keyCode === 13) {
+          //触发点击事件
+          btnSend.click()
+        }
+      })
+    </script>
+  </body>
+</html>
